@@ -15,8 +15,27 @@ export type GameState =
 
 export type GameStatus = GameState['status'];
 
+export type Rating = 'Excellent' | 'Very Good' | 'Good' | 'Below Average';
+
+/** Named thresholds so the cutoffs live in one place, not scattered as
+ *  magic numbers through UI code. */
+export const RATING_THRESHOLDS_MS = {
+  excellent: 200,
+  veryGood: 250,
+  good: 350,
+} as const;
+
+/** Pure classification function — no side effects, easy to unit test. */
+export function getRatingForTime(reactionMs: number): Rating {
+  if (reactionMs < RATING_THRESHOLDS_MS.excellent) return 'Excellent';
+  if (reactionMs < RATING_THRESHOLDS_MS.veryGood) return 'Very Good';
+  if (reactionMs < RATING_THRESHOLDS_MS.good) return 'Good';
+  return 'Below Average';
+}
+
 export interface Attempt {
   reactionMs: number;
+  rating: Rating;
   /** Wall-clock time of the attempt, for display only (never for timing). */
   timestamp: number;
 }
@@ -176,7 +195,11 @@ export class GameEngine {
   // --- score history + stats -------------------------------------------------
 
   private recordAttempt(reactionMs: number): void {
-    this.attempts.push({ reactionMs, timestamp: Date.now() });
+    this.attempts.push({
+      reactionMs,
+      rating: getRatingForTime(reactionMs),
+      timestamp: Date.now(),
+    });
     this.persistAttempts();
   }
 
@@ -215,7 +238,12 @@ export class GameEngine {
       if (!raw) return [];
       const parsed: unknown = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      return parsed.filter(isAttempt);
+      // Older saved attempts (before ratings existed) won't have `rating` —
+      // backfill it here so history from a previous session still displays.
+      return parsed.filter(isLegacyAttempt).map((a) => ({
+        ...a,
+        rating: 'rating' in a ? (a as Attempt).rating : getRatingForTime(a.reactionMs),
+      }));
     } catch {
       return [];
     }
@@ -231,7 +259,9 @@ export class GameEngine {
   }
 }
 
-function isAttempt(value: unknown): value is Attempt {
+function isLegacyAttempt(
+  value: unknown,
+): value is { reactionMs: number; timestamp: number; rating?: Rating } {
   return (
     typeof value === 'object' &&
     value !== null &&

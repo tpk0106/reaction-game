@@ -1,4 +1,4 @@
-import type { Attempt, GameState, GameStatus, Stats } from './game-state';
+import { getRatingForTime, type Attempt, type GameState, type GameStatus, type Rating, type Stats } from './game-state';
 
 /**
  * The DOM view layer. It renders `GameState` into the page and forwards user
@@ -33,6 +33,13 @@ function formatMs(ms: number): string {
   return `${Math.round(ms)} ms`;
 }
 
+const RATING_COLOR: Record<Rating, string> = {
+  Excellent: 'var(--color-ready)',
+  'Very Good': 'var(--color-ready)',
+  Good: 'var(--color-accent)',
+  'Below Average': 'var(--color-false-start)',
+};
+
 function requireEl<T extends Element>(root: ParentNode, selector: string): T {
   const el = root.querySelector<T>(selector);
   if (!el) throw new Error(`Missing required element: ${selector}`);
@@ -42,6 +49,7 @@ function requireEl<T extends Element>(root: ParentNode, selector: string): T {
 export class GameUI {
   private readonly playArea: HTMLElement;
   private readonly readout: HTMLElement;
+  private readonly ratingLabel: HTMLElement;
   private readonly statusMessage: HTMLElement;
   private readonly actionButton: HTMLButtonElement;
   private readonly clearButton: HTMLButtonElement;
@@ -54,6 +62,7 @@ export class GameUI {
   constructor(root: Document, private readonly callbacks: UICallbacks) {
     this.playArea = requireEl<HTMLElement>(root, '#play-area');
     this.readout = requireEl<HTMLElement>(root, '#readout');
+    this.ratingLabel = requireEl<HTMLElement>(root, '#rating-label');
     this.statusMessage = requireEl<HTMLElement>(root, '#status-message');
     this.actionButton = requireEl<HTMLButtonElement>(root, '#action-button');
     this.clearButton = requireEl<HTMLButtonElement>(root, '#clear-button');
@@ -107,20 +116,37 @@ export class GameUI {
     switch (state.status) {
       case 'idle':
         this.setReadout('—', 'var(--color-text)');
+        this.setRating(null);
         break;
       case 'waiting':
         this.setReadout('•••', 'var(--color-waiting)');
+        this.setRating(null);
         break;
       case 'ready':
         this.setReadout('GO', 'var(--color-ready)');
+        this.setRating(null);
         break;
-      case 'result':
+      case 'result': {
         this.setReadout(formatMs(state.reactionMs), 'var(--color-ready)');
+        this.setRating(getRatingForTime(state.reactionMs));
         break;
+      }
       case 'falseStart':
         this.setReadout('Too soon', 'var(--color-false-start)');
+        this.setRating(null);
         break;
     }
+  }
+
+  private setRating(rating: Rating | null): void {
+    if (rating === null) {
+      this.ratingLabel.hidden = true;
+      this.ratingLabel.textContent = '';
+      return;
+    }
+    this.ratingLabel.hidden = false;
+    this.ratingLabel.textContent = rating;
+    this.ratingLabel.style.color = RATING_COLOR[rating];
   }
 
   private setReadout(text: string, color: string): void {
@@ -160,11 +186,19 @@ export class GameUI {
       time.textContent = new Date(attempt.timestamp).toLocaleTimeString();
 
       const value = document.createElement('span');
-      value.className = 'font-semibold';
-      value.textContent = isBest
+      value.className = 'flex items-center gap-2 font-semibold';
+
+      const rating = document.createElement('span');
+      rating.className = 'text-xs font-medium uppercase tracking-wide';
+      rating.style.color = RATING_COLOR[attempt.rating];
+      rating.textContent = attempt.rating;
+
+      const msText = document.createElement('span');
+      msText.textContent = isBest
         ? `${formatMs(attempt.reactionMs)} ★`
         : formatMs(attempt.reactionMs);
 
+      value.append(rating, msText);
       item.append(time, value);
       this.historyList.appendChild(item);
     }
