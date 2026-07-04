@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reaction Timer — how fast are you?</title>
+    <meta
+      name="description"
+      content="A minimalist reaction-time game built with vanilla TypeScript and Three.js."
+    />
+  </head>
+  <body class="min-h-full font-body">
+    <div class="mx-auto flex min-h-screen max-w-3xl flex-col px-5 py-8 sm:py-12">
+      <header class="mb-6 text-center sm:mb-10">
+        <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          Reaction&nbsp;Timer
+        </h1>
+        <p class="mx-auto mt-2 max-w-md text-sm text-text-muted sm:text-base">
+          Wait for the icosahedron to turn
+          <span class="font-medium" style="color: var(--color-ready)">green</span>,
+          then click as fast as you can.
+        </p>
+      </header>
+
+      <main class="flex flex-1 flex-col gap-6">
+        <!-- Play area: the entire surface is the click/tap target -->
+        <section
+          id="play-area"
+          class="play-area relative aspect-square w-full cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-bg-surface shadow-2xl shadow-black/40 sm:aspect-[16/10]"
+          role="button"
+          tabindex="0"
+          aria-label="Reaction play area. Click, tap, or press space when the shape turns green."
+        >
+          <!-- Three.js canvas mounts here -->
+          <div id="scene-container" class="absolute inset-0"></div>
+
+          <!-- Readout overlay. pointer-events-none so taps reach the surface. -->
+          <div
+            class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center"
+          >
+            <p
+              id="readout"
+              class="font-mono text-5xl font-bold tabular-nums drop-shadow sm:text-7xl"
+              style="min-height: 1.1em"
+            >
+              —
+            </p>
+            <p
+              id="status-message"
+              class="mt-3 max-w-xs px-4 font-display text-base font-medium sm:text-lg"
+            >
+              Click anywhere to start
+            </p>
+          </div>
+        </section>
+
+        <div class="flex justify-center">
+          <button
+            id="action-button"
+            type="button"
+            class="rounded-xl bg-accent px-8 py-3 font-display text-base font-semibold text-white transition-colors hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-hover focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          >
+            Start
+          </button>
+        </div>
+
+        <!-- Session stats -->
+        <section
+          class="grid grid-cols-3 gap-3 sm:gap-4"
+          aria-label="Session statistics"
+        >
+          <div class="rounded-xl border border-white/5 bg-bg-surface p-4 text-center">
+            <p class="text-xs uppercase tracking-wider text-text-muted">Best</p>
+            <p
+              id="stat-best"
+              class="mt-1 font-mono text-xl font-bold tabular-nums sm:text-2xl"
+            >
+              —
+            </p>
+          </div>
+          <div class="rounded-xl border border-white/5 bg-bg-surface p-4 text-center">
+            <p class="text-xs uppercase tracking-wider text-text-muted">Average</p>
+            <p
+              id="stat-average"
+              class="mt-1 font-mono text-xl font-bold tabular-nums sm:text-2xl"
+            >
+              —
+            </p>
+          </div>
+          <div class="rounded-xl border border-white/5 bg-bg-surface p-4 text-center">
+            <p class="text-xs uppercase tracking-wider text-text-muted">Attempts</p>
+            <p
+              id="stat-count"
+              class="mt-1 font-mono text-xl font-bold tabular-nums sm:text-2xl"
+            >
+              0
+            </p>
+          </div>
+        </section>
+
+        <!-- Recent attempts -->
+        <section class="rounded-xl border border-white/5 bg-bg-surface p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <h2
+              class="font-display text-sm font-semibold uppercase tracking-wider text-text-muted"
+            >
+              Recent attempts
+            </h2>
+            <button
+              id="clear-button"
+              type="button"
+              class="text-xs font-medium text-text-muted transition-colors hover:text-state-false focus:outline-none focus-visible:ring-2 focus-visible:ring-state-false focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            >
+              Clear
+            </button>
+          </div>
+          <ol
+            id="history-list"
+            class="flex flex-col gap-1 font-mono text-sm tabular-nums"
+            hidden
+          ></ol>
+          <p id="history-empty" class="text-sm text-text-muted">
+            No attempts yet — your history will appear here.
+          </p>
+        </section>
+      </main>
+
+      <footer class="mt-8 text-center text-xs text-text-muted">
+        Built with vanilla TypeScript + Three.js · Signal design system
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

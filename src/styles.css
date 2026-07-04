@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Signal palette — the single source of truth for the whole app.
+  Tailwind utilities read these (see tailwind.config.js), and scene.ts reads
+  them at runtime via getComputedStyle, so the 2D UI and the 3D materials are
+  guaranteed to use identical hex values.
+*/
+:root {
+  --color-bg: #0a0e14; /* primary background */
+  --color-surface: #141922; /* cards / play area */
+  --color-text: #f4f6f8; /* primary text */
+  --color-text-muted: #8b93a1; /* secondary text */
+
+  --color-waiting: #dc4f4f; /* red  — wait, do not click */
+  --color-ready: #3ecf8e; /* green — go / success */
+  --color-false-start: #f5a623; /* amber — too soon */
+
+  --color-accent: #6366f1; /* indigo — primary actions */
+  --color-accent-hover: #818cf8; /* indigo — hover / glow */
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* The play surface is the primary click target; suppress selection/scroll
+   jank so rapid tapping stays crisp on both desktop and touch. */
+.play-area {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Respect users who prefer reduced motion — the scene keeps its state colors
+   but the idle animation calms down (handled in scene.ts via this flag). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
