@@ -1,7 +1,8 @@
 import "../src/styles.css";
-import { GameEngine } from "./game-state";
+import { GameEngine, getRatingForTime } from "./game-state";
 import { GameUI } from "./ui";
 import { ReactionScene } from "./scene";
+import { soundEngine } from "./sound";
 
 /**
  * Composition root. The engine is the single source of truth; the UI and the
@@ -29,6 +30,10 @@ function bootstrap(): void {
     if (state.status === "result") {
       ui.renderStats(engine.getStats());
       ui.renderHistory(engine.getAttempts());
+      soundEngine.playResult(getRatingForTime(state.reactionMs));
+    }
+    if (state.status === "falseStart") {
+      soundEngine.playFalseStart();
     }
   });
 
